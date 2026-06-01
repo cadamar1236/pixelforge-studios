@@ -1,0 +1,27 @@
+{
+  "app_type": "saas_dashboard",
+  "app_name": "MicroToolKit",
+  "tagline": "Be a solopreneur. Build with tools that scale with you.",
+  "primary_color": "#4F46E5",
+  "accent_color": "#F59E0B",
+  "sections": [
+    "hero",
+    "features",
+    "pricing",
+    "faq",
+    "testimonials",
+    "cta"
+  ],
+  "backend_resources": [
+    "users",
+    "subscriptions",
+    "tools",
+    "usage_logs",
+    "payments"
+  ],
+  "features": [
+    "Quick-start templates for every micro-tool",
+    "Pay-as-you-grow pricing from $9/month",
+    "Unified dashboard to monitor all tool performance"
+  ]
+}
