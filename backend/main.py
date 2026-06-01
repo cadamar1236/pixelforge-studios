@@ -1,15 +1,16 @@
 import os
-from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, Text, Boolean
+from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, Text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import random
+from uuid import uuid4
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
-COMPANY_SLUG = os.environ.get("COMPANY_SLUG", "pixelforge")
+COMPANY_SLUG = os.environ.get("COMPANY_SLUG", "company")
 db_engine = None
 SessionLocal = None
 
@@ -24,53 +25,86 @@ if DATABASE_URL:
 
 class User(Base):
     __tablename__ = f"{COMPANY_SLUG}_users"
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True)
-    name = Column(String)
-    joined_date = Column(DateTime, default=datetime.utcnow)
+    id = Column(String, primary_key=True, default=lambda: str(uuid4()))
+    name = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
     plan = Column(String, default="free")
 
 class Subscription(Base):
     __tablename__ = f"{COMPANY_SLUG}_subscriptions"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer)
-    tool_id = Column(Integer)
-    plan_name = Column(String)
-    price = Column(Float)
-    start_date = Column(DateTime, default=datetime.utcnow)
+    id = Column(String, primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String, nullable=False)
+    tool_id = Column(String, nullable=False)
     status = Column(String, default="active")
+    price = Column(Float, nullable=False)
+    start_date = Column(DateTime, default=datetime.utcnow)
+    end_date = Column(DateTime)
 
 class Tool(Base):
     __tablename__ = f"{COMPANY_SLUG}_tools"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
+    id = Column(String, primary_key=True, default=lambda: str(uuid4()))
+    name = Column(String, nullable=False)
     description = Column(Text)
     category = Column(String)
-    monthly_price = Column(Float)
+    price = Column(Float)
     active_users = Column(Integer, default=0)
 
-class UsageLog(Base):
-    __tablename__ = f"{COMPANY_SLUG}_usage_logs"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer)
-    tool_id = Column(Integer)
-    action = Column(String)
+class AnalyticsEvent(Base):
+    __tablename__ = f"{COMPANY_SLUG}_analytics"
+    id = Column(String, primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String)
+    event = Column(String)
+    tool_id = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
+    metadata = Column(Text)
 
-class Payment(Base):
-    __tablename__ = f"{COMPANY_SLUG}_payments"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer)
-    subscription_id = Column(Integer)
-    amount = Column(Float)
-    currency = Column(String, default="USD")
-    status = Column(String, default="completed")
-    created_at = Column(DateTime, default=datetime.utcnow)
+mock_users = [
+    {"id": "1", "name": "Alice Johnson", "email": "alice@example.com", "created_at": "2024-01-15T10:00:00", "plan": "pro"},
+    {"id": "2", "name": "Bob Smith", "email": "bob@example.com", "created_at": "2024-02-20T14:30:00", "plan": "business"},
+    {"id": "3", "name": "Charlie Brown", "email": "charlie@example.com", "created_at": "2024-03-10T08:00:00", "plan": "free"},
+    {"id": "4", "name": "Diana Prince", "email": "diana@example.com", "created_at": "2024-04-05T16:45:00", "plan": "pro"},
+    {"id": "5", "name": "Eve Adams", "email": "eve@example.com", "created_at": "2024-05-12T09:15:00", "plan": "free"},
+    {"id": "6", "name": "Frank Castle", "email": "frank@example.com", "created_at": "2024-06-01T11:00:00", "plan": "business"},
+    {"id": "7", "name": "Grace Hopper", "email": "grace@example.com", "created_at": "2024-06-15T13:20:00", "plan": "pro"},
+    {"id": "8", "name": "Henry Ford", "email": "henry@example.com", "created_at": "2024-07-01T07:30:00", "plan": "free"}
+]
 
-if DATABASE_URL and db_engine:
-    Base.metadata.create_all(db_engine)
+mock_tools = [
+    {"id": "t1", "name": "Invoicely", "description": "Smart invoicing for freelancers", "category": "Finance", "price": 19.0, "active_users": 1240},
+    {"id": "t2", "name": "LeadMagnet", "description": "Capture and nurture leads", "category": "Marketing", "price": 29.0, "active_users": 890},
+    {"id": "t3", "name": "TimeTracker Pro", "description": "Track hours and productivity", "category": "Productivity", "price": 14.0, "active_users": 2100},
+    {"id": "t4", "name": "SocialScheduler", "description": "Schedule social media posts", "category": "Marketing", "price": 9.0, "active_users": 3400},
+    {"id": "t5", "name": "ContractLens", "description": "Review contracts with AI", "category": "Legal", "price": 24.0, "active_users": 560},
+    {"id": "t6", "name": "PulseAnalytics", "description": "Real-time business metrics dashboard", "category": "Analytics", "price": 19.0, "active_users": 1470},
+    {"id": "t7", "name": "MailForge", "description": "Email marketing automation", "category": "Marketing", "price": 14.0, "active_users": 920}
+]
 
-app = FastAPI(title="MicroToolKit", version="1.0.0")
+mock_subscriptions = [
+    {"id": "s1", "user_id": "1", "tool_id": "t1", "status": "active", "price": 19.0, "start_date": "2024-01-20T10:00:00", "end_date": "2025-01-20T10:00:00"},
+    {"id": "s2", "user_id": "1", "tool_id": "t3", "status": "active", "price": 14.0, "start_date": "2024-02-01T14:00:00", "end_date": "2025-02-01T14:00:00"},
+    {"id": "s3", "user_id": "2", "tool_id": "t2", "status": "active", "price": 29.0, "start_date": "2024-03-15T09:00:00", "end_date": "2025-03-15T09:00:00"},
+    {"id": "s4", "user_id": "2", "tool_id": "t4", "status": "active", "price": 9.0, "start_date": "2024-04-01T11:30:00", "end_date": "2025-04-01T11:30:00"},
+    {"id": "s5", "user_id": "3", "tool_id": "t6", "status": "active", "price": 19.0, "start_date": "2024-05-10T16:00:00", "end_date": "2025-05-10T16:00:00"},
+    {"id": "s6", "user_id": "4", "tool_id": "t5", "status": "active", "price": 24.0, "start_date": "2024-06-05T08:45:00", "end_date": "2025-06-05T08:45:00"},
+    {"id": "s7", "user_id": "5", "tool_id": "t7", "status": "active", "price": 14.0, "start_date": "2024-07-01T12:00:00", "end_date": "2025-07-01T12:00:00"},
+    {"id": "s8", "user_id": "6", "tool_id": "t1", "status": "active", "price": 19.0, "start_date": "2024-07-15T10:30:00", "end_date": "2025-07-15T10:30:00"},
+    {"id": "s9", "user_id": "7", "tool_id": "t3", "status": "active", "price": 14.0, "start_date": "2024-08-01T15:00:00", "end_date": "2025-08-01T15:00:00"},
+    {"id": "s10", "user_id": "1", "tool_id": "t4", "status": "active", "price": 9.0, "start_date": "2024-08-10T09:20:00", "end_date": "2025-08-10T09:20:00"}
+]
+
+mock_analytics = [
+    {"id": "a1", "user_id": "1", "event": "login", "tool_id": "t1", "timestamp": "2024-08-01T08:00:00", "metadata": "{\"browser\": \"Chrome\"}"},
+    {"id": "a2", "user_id": "2", "event": "purchase", "tool_id": "t2", "timestamp": "2024-08-01T09:30:00", "metadata": "{\"amount\": 29.0}"},
+    {"id": "a3", "user_id": "3", "event": "feature_use", "tool_id": "t6", "timestamp": "2024-08-01T10:15:00", "metadata": "{\"feature\": \"report_generation\"}"},
+    {"id": "a4", "user_id": "4", "event": "signup", "tool_id": "t5", "timestamp": "2024-08-01T11:00:00", "metadata": "{\"source\": \"referral\"}"},
+    {"id": "a5", "user_id": "5", "event": "cancellation", "tool_id": "t7", "timestamp": "2024-08-01T12:45:00", "metadata": "{\"reason\": \"too_expensive\"}"},
+    {"id": "a6", "user_id": "6", "event": "login", "tool_id": "t1", "timestamp": "2024-08-02T07:30:00", "metadata": "{\"browser\": \"Firefox\"}"},
+    {"id": "a7", "user_id": "7", "event": "feature_use", "tool_id": "t3", "timestamp": "2024-08-02T08:45:00", "metadata": "{\"feature\": \"time_tracking\"}"},
+    {"id": "a8", "user_id": "1", "event": "purchase", "tool_id": "t4", "timestamp": "2024-08-02T09:00:00", "metadata": "{\"amount\": 9.0}"}
+]
+
+app = FastAPI(title="SoloSuite", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -79,253 +113,177 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MOCK_USERS = [
-    {"id": 1, "email": "sarah@buildr.com", "name": "Sarah Chen", "joined_date": "2024-01-15T10:00:00", "plan": "pro"},
-    {"id": 2, "email": "marcus@dev.io", "name": "Marcus Johnson", "joined_date": "2024-02-20T14:30:00", "plan": "growth"},
-    {"id": 3, "email": "elena@startup.xyz", "name": "Elena Rodriguez", "joined_date": "2024-03-10T08:00:00", "plan": "free"},
-    {"id": 4, "email": "james@solocorp.com", "name": "James Wilson", "joined_date": "2024-04-05T16:45:00", "plan": "pro"},
-    {"id": 5, "email": "anna@sidehustle.io", "name": "Anna Kim", "joined_date": "2024-05-12T11:20:00", "plan": "growth"},
-    {"id": 6, "email": "david@microkit.com", "name": "David Park", "joined_date": "2024-06-01T09:15:00", "plan": "free"},
-    {"id": 7, "email": "lisa@indiehack.me", "name": "Lisa Thompson", "joined_date": "2024-06-20T13:40:00", "plan": "pro"},
-]
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    plan: str = "free"
 
-MOCK_TOOLS = [
-    {"id": 1, "name": "InvoiceBot", "description": "AI-powered invoice generation and tracking", "category": "finance", "monthly_price": 19.0, "active_users": 234},
-    {"id": 2, "name": "ContentScribe", "description": "Blog post generator with SEO optimization", "category": "content", "monthly_price": 14.0, "active_users": 567},
-    {"id": 3, "name": "LeadScraper", "description": "Automated lead collection from LinkedIn", "category": "sales", "monthly_price": 29.0, "active_users": 345},
-    {"id": 4, "name": "ScheduleGenius", "description": "Smart calendar management and meeting scheduler", "category": "productivity", "monthly_price": 9.0, "active_users": 891},
-    {"id": 5, "name": "AnalytixMini", "description": "Lightweight website analytics dashboard", "category": "analytics", "monthly_price": 12.0, "active_users": 678},
-    {"id": 6, "name": "SocialPilot", "description": "Social media post scheduler and analyzer", "category": "marketing", "monthly_price": 24.0, "active_users": 423},
-]
+class SubscriptionCreate(BaseModel):
+    user_id: str
+    tool_id: str
+    price: float
 
-MOCK_SUBSCRIPTIONS = [
-    {"id": 1, "user_id": 1, "tool_id": 1, "plan_name": "pro", "price": 19.0, "start_date": "2024-01-15T10:00:00", "status": "active"},
-    {"id": 2, "user_id": 2, "tool_id": 3, "plan_name": "growth", "price": 29.0, "start_date": "2024-02-20T14:30:00", "status": "active"},
-    {"id": 3, "user_id": 1, "tool_id": 4, "plan_name": "pro", "price": 9.0, "start_date": "2024-03-01T08:00:00", "status": "active"},
-    {"id": 4, "user_id": 3, "tool_id": 2, "plan_name": "free", "price": 0.0, "start_date": "2024-03-10T08:00:00", "status": "trial"},
-    {"id": 5, "user_id": 4, "tool_id": 5, "plan_name": "pro", "price": 12.0, "start_date": "2024-04-05T16:45:00", "status": "active"},
-    {"id": 6, "user_id": 5, "tool_id": 6, "plan_name": "growth", "price": 24.0, "start_date": "2024-05-12T11:20:00", "status": "active"},
-    {"id": 7, "user_id": 2, "tool_id": 2, "plan_name": "growth", "price": 14.0, "start_date": "2024-06-01T09:00:00", "status": "active"},
-    {"id": 8, "user_id": 7, "tool_id": 1, "plan_name": "pro", "price": 19.0, "start_date": "2024-06-20T13:40:00", "status": "active"},
-]
+class AnalyticsEventModel(BaseModel):
+    user_id: str
+    event: str
+    tool_id: str
+    metadata: str = "{}"
 
-MOCK_USAGE_LOGS = [
-    {"id": 1, "user_id": 1, "tool_id": 1, "action": "invoice_generated", "timestamp": "2024-07-01T10:30:00"},
-    {"id": 2, "user_id": 2, "tool_id": 3, "action": "lead_exported", "timestamp": "2024-07-01T11:15:00"},
-    {"id": 3, "user_id": 4, "tool_id": 5, "action": "report_viewed", "timestamp": "2024-07-01T14:00:00"},
-    {"id": 4, "user_id": 5, "tool_id": 6, "action": "post_scheduled", "timestamp": "2024-07-02T09:45:00"},
-    {"id": 5, "user_id": 1, "tool_id": 4, "action": "meeting_created", "timestamp": "2024-07-02T15:20:00"},
-    {"id": 6, "user_id": 3, "tool_id": 2, "action": "content_generated", "timestamp": "2024-07-03T08:30:00"},
-    {"id": 7, "user_id": 7, "tool_id": 1, "action": "invoice_generated", "timestamp": "2024-07-03T12:00:00"},
-    {"id": 8, "user_id": 2, "tool_id": 2, "action": "content_published", "timestamp": "2024-07-03T16:45:00"},
-]
-
-MOCK_PAYMENTS = [
-    {"id": 1, "user_id": 1, "subscription_id": 1, "amount": 19.0, "currency": "USD", "status": "completed", "created_at": "2024-01-15T10:05:00"},
-    {"id": 2, "user_id": 2, "subscription_id": 2, "amount": 29.0, "currency": "USD", "status": "completed", "created_at": "2024-02-20T14:35:00"},
-    {"id": 3, "user_id": 1, "subscription_id": 3, "amount": 9.0, "currency": "USD", "status": "completed", "created_at": "2024-03-01T08:05:00"},
-    {"id": 4, "user_id": 4, "subscription_id": 5, "amount": 12.0, "currency": "USD", "status": "completed", "created_at": "2024-04-05T16:50:00"},
-    {"id": 5, "user_id": 5, "subscription_id": 6, "amount": 24.0, "currency": "USD", "status": "completed", "created_at": "2024-05-12T11:25:00"},
-    {"id": 6, "user_id": 2, "subscription_id": 7, "amount": 14.0, "currency": "USD", "status": "completed", "created_at": "2024-06-01T09:05:00"},
-    {"id": 7, "user_id": 7, "subscription_id": 8, "amount": 19.0, "currency": "USD", "status": "completed", "created_at": "2024-06-20T13:45:00"},
-    {"id": 8, "user_id": 1, "subscription_id": 1, "amount": 19.0, "currency": "USD", "status": "completed", "created_at": "2024-07-15T10:05:00"},
-]
+@app.on_event("startup")
+async def startup():
+    if db_engine:
+        Base.metadata.create_all(db_engine)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "app": "MicroToolKit", "version": "1.0.0"}
+    return {"status": "ok", "app": "SoloSuite", "version": "1.0.0"}
 
 @app.get("/api/info")
 async def info():
     return {
         "name": "PixelForge Studios",
-        "app": "MicroToolKit",
-        "tagline": "Empowering solopreneurs with affordable micro-tools",
+        "app": "SoloSuite",
+        "tagline": "Empowering solopreneurs with powerful micro-tools",
         "founded": "2023",
         "team_size": 8,
         "headquarters": "Austin, TX",
-        "tools_count": 6,
-        "active_users": 2345,
-        "monthly_revenue": 45800
+        "mission": "A digital product studio that builds and sells SaaS micro-tools for solopreneurs",
+        "pricing_range": "$9-$29/month",
+        "total_users": len(mock_users),
+        "total_tools": len(mock_tools)
     }
 
 @app.get("/api/metrics")
 async def metrics():
+    total_revenue = sum(s["price"] for s in mock_subscriptions if s["status"] == "active")
+    active_subs = len([s for s in mock_subscriptions if s["status"] == "active"])
+    churned = len([s for s in mock_subscriptions if s["status"] != "active"])
     return {
-        "total_users": 2345,
-        "active_subscriptions": 1567,
-        "mrr": 45800,
-        "arpu": 29.20,
-        "churn_rate": 3.2,
-        "trial_conversion": 18.5,
-        "active_tools": 6,
-        "total_payments_month": 48900
-    }
-
-@app.get("/api/stats")
-async def stats():
-    return {
-        "users_by_plan": {"free": 778, "pro": 892, "growth": 675},
-        "revenue_by_tool": [
-            {"tool": "InvoiceBot", "revenue": 9876, "subscribers": 234},
-            {"tool": "ContentScribe", "revenue": 7938, "subscribers": 567},
-            {"tool": "LeadScraper", "revenue": 10005, "subscribers": 345},
-            {"tool": "ScheduleGenius", "revenue": 8019, "subscribers": 891},
-            {"tool": "AnalytixMini", "revenue": 8136, "subscribers": 678},
-            {"tool": "SocialPilot", "revenue": 10152, "subscribers": 423}
-        ],
-        "daily_active_users": 892,
-        "avg_session_minutes": 14.5
-    }
-
-@app.get("/api/recent-activity")
-async def recent_activity():
-    return [
-        {"id": 1, "user": "Sarah Chen", "action": "Upgraded to Pro plan", "tool": "InvoiceBot", "timestamp": "2 hours ago"},
-        {"id": 2, "user": "Marcus Johnson", "action": "Exported 50 leads", "tool": "LeadScraper", "timestamp": "3 hours ago"},
-        {"id": 3, "user": "Elena Rodriguez", "action": "Started free trial", "tool": "ContentScribe", "timestamp": "5 hours ago"},
-        {"id": 4, "user": "Lisa Thompson", "action": "Generated invoice", "tool": "InvoiceBot", "timestamp": "6 hours ago"},
-        {"id": 5, "user": "David Park", "action": "Scheduled 3 posts", "tool": "SocialPilot", "timestamp": "8 hours ago"},
-        {"id": 6, "user": "Anna Kim", "action": "Viewed analytics report", "tool": "AnalytixMini", "timestamp": "12 hours ago"},
-        {"id": 7, "user": "James Wilson", "action": "Cancelled subscription", "tool": "ScheduleGenius", "timestamp": "1 day ago"},
-        {"id": 8, "user": "Sarah Chen", "action": "Created meeting", "tool": "ScheduleGenius", "timestamp": "1 day ago"}
-    ]
-
-@app.get("/api/chart-data")
-async def chart_data():
-    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    return {
-        "new_users": [45, 52, 48, 63, 55, 38, 41],
-        "active_sessions": [230, 280, 310, 290, 350, 220, 195],
-        "revenue": [3200, 3800, 4100, 3900, 4500, 2800, 2500],
-        "labels": days
+        "mrr": round(total_revenue, 2),
+        "active_subscriptions": active_subs,
+        "total_users": len(mock_users),
+        "churn_rate": round(churned / max(len(mock_subscriptions), 1) * 100, 2),
+        "average_revenue_per_user": round(total_revenue / max(len(mock_users), 1), 2),
+        "tool_usage_count": sum(s["active_users"] for s in mock_tools),
+        "last_updated": datetime.utcnow().isoformat()
     }
 
 @app.get("/api/users")
 async def get_users():
-    if SessionLocal:
-        db = SessionLocal()
-        users = db.query(User).all()
-        db.close()
-        return [{"id": u.id, "email": u.email, "name": u.name, "joined_date": u.joined_date.isoformat(), "plan": u.plan} for u in users]
-    return MOCK_USERS
-
-@app.get("/api/tools")
-async def get_tools():
-    if SessionLocal:
-        db = SessionLocal()
-        tools = db.query(Tool).all()
-        db.close()
-        return [{"id": t.id, "name": t.name, "description": t.description, "category": t.category, "monthly_price": t.monthly_price, "active_users": t.active_users} for t in tools]
-    return MOCK_TOOLS
-
-@app.get("/api/subscriptions")
-async def get_subscriptions():
-    if SessionLocal:
-        db = SessionLocal()
-        subs = db.query(Subscription).all()
-        db.close()
-        return [{"id": s.id, "user_id": s.user_id, "tool_id": s.tool_id, "plan_name": s.plan_name, "price": s.price, "start_date": s.start_date.isoformat(), "status": s.status} for s in subs]
-    return MOCK_SUBSCRIPTIONS
-
-@app.get("/api/payments")
-async def get_payments():
-    if SessionLocal:
-        db = SessionLocal()
-        payments = db.query(Payment).all()
-        db.close()
-        return [{"id": p.id, "user_id": p.user_id, "subscription_id": p.subscription_id, "amount": p.amount, "currency": p.currency, "status": p.status, "created_at": p.created_at.isoformat()} for p in payments]
-    return MOCK_PAYMENTS
-
-@app.get("/api/usage-logs")
-async def get_usage_logs():
-    if SessionLocal:
-        db = SessionLocal()
-        logs = db.query(UsageLog).all()
-        db.close()
-        return [{"id": l.id, "user_id": l.user_id, "tool_id": l.tool_id, "action": l.action, "timestamp": l.timestamp.isoformat()} for l in logs]
-    return MOCK_USAGE_LOGS
-
-@app.get("/api/tools/{tool_id}")
-async def get_tool(tool_id: int):
-    if SessionLocal:
-        db = SessionLocal()
-        tool = db.query(Tool).filter(Tool.id == tool_id).first()
-        db.close()
-        if not tool:
-            raise HTTPException(404, "Tool not found")
-        return {"id": tool.id, "name": tool.name, "description": tool.description, "category": tool.category, "monthly_price": tool.monthly_price, "active_users": tool.active_users}
-    for t in MOCK_TOOLS:
-        if t["id"] == tool_id:
-            return t
-    raise HTTPException(404, "Tool not found")
-
-@app.get("/api/users/{user_id}")
-async def get_user(user_id: int):
-    if SessionLocal:
-        db = SessionLocal()
-        user = db.query(User).filter(User.id == user_id).first()
-        db.close()
-        if not user:
-            raise HTTPException(404, "User not found")
-        return {"id": user.id, "email": user.email, "name": user.name, "joined_date": user.joined_date.isoformat(), "plan": user.plan}
-    for u in MOCK_USERS:
-        if u["id"] == user_id:
-            return u
-    raise HTTPException(404, "User not found")
-
-@app.get("/api/users/{user_id}/subscriptions")
-async def get_user_subscriptions(user_id: int):
-    if SessionLocal:
-        db = SessionLocal()
-        subs = db.query(Subscription).filter(Subscription.user_id == user_id).all()
-        db.close()
-        return [{"id": s.id, "user_id": s.user_id, "tool_id": s.tool_id, "plan_name": s.plan_name, "price": s.price, "start_date": s.start_date.isoformat(), "status": s.status} for s in subs]
-    return [s for s in MOCK_SUBSCRIPTIONS if s["user_id"] == user_id]
-
-class UserCreate(BaseModel):
-    email: str
-    name: str
-    plan: str = "free"
+    return mock_users
 
 @app.post("/api/users")
 async def create_user(user: UserCreate):
-    if SessionLocal:
-        db = SessionLocal()
-        db_user = User(email=user.email, name=user.name, plan=user.plan)
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        new_user = {"id": db_user.id, "email": db_user.email, "name": db_user.name, "joined_date": db_user.joined_date.isoformat(), "plan": db_user.plan}
-        db.close()
-        return new_user
-    new_id = max(u["id"] for u in MOCK_USERS) + 1
-    new_user = {"id": new_id, "email": user.email, "name": user.name, "joined_date": datetime.utcnow().isoformat(), "plan": user.plan}
-    MOCK_USERS.append(new_user)
+    new_user = {
+        "id": str(uuid4()),
+        "name": user.name,
+        "email": user.email,
+        "created_at": datetime.utcnow().isoformat(),
+        "plan": user.plan
+    }
+    mock_users.append(new_user)
     return new_user
 
-class SubscriptionCreate(BaseModel):
-    user_id: int
-    tool_id: int
-    plan_name: str
-    price: float
+@app.get("/api/tools")
+async def get_tools():
+    return mock_tools
+
+@app.get("/api/subscriptions")
+async def get_subscriptions():
+    return mock_subscriptions
 
 @app.post("/api/subscriptions")
 async def create_subscription(sub: SubscriptionCreate):
-    if SessionLocal:
-        db = SessionLocal()
-        db_sub = Subscription(user_id=sub.user_id, tool_id=sub.tool_id, plan_name=sub.plan_name, price=sub.price)
-        db.add(db_sub)
-        db.commit()
-        db.refresh(db_sub)
-        new_sub = {"id": db_sub.id, "user_id": db_sub.user_id, "tool_id": db_sub.tool_id, "plan_name": db_sub.plan_name, "price": db_sub.price, "start_date": db_sub.start_date.isoformat(), "status": db_sub.status}
-        db.close()
-        return new_sub
-    new_id = max(s["id"] for s in MOCK_SUBSCRIPTIONS) + 1
-    new_sub = {"id": new_id, "user_id": sub.user_id, "tool_id": sub.tool_id, "plan_name": sub.plan_name, "price": sub.price, "start_date": datetime.utcnow().isoformat(), "status": "active"}
-    MOCK_SUBSCRIPTIONS.append(new_sub)
+    new_sub = {
+        "id": str(uuid4()),
+        "user_id": sub.user_id,
+        "tool_id": sub.tool_id,
+        "status": "active",
+        "price": sub.price,
+        "start_date": datetime.utcnow().isoformat(),
+        "end_date": (datetime.utcnow() + timedelta(days=365)).isoformat()
+    }
+    mock_subscriptions.append(new_sub)
     return new_sub
 
+@app.get("/api/analytics")
+async def get_analytics():
+    return mock_analytics
+
+@app.post("/api/analytics")
+async def create_analytics(event: AnalyticsEventModel):
+    new_event = {
+        "id": str(uuid4()),
+        "user_id": event.user_id,
+        "event": event.event,
+        "tool_id": event.tool_id,
+        "timestamp": datetime.utcnow().isoformat(),
+        "metadata": event.metadata
+    }
+    mock_analytics.append(new_event)
+    return new_event
+
+@app.get("/api/stats")
+async def stats():
+    plan_distribution = {}
+    for u in mock_users:
+        plan = u["plan"]
+        plan_distribution[plan] = plan_distribution.get(plan, 0) + 1
+    
+    tool_popularity = sorted(mock_tools, key=lambda x: x["active_users"], reverse=True)
+    
+    return {
+        "plan_distribution": plan_distribution,
+        "total_users": len(mock_users),
+        "total_subscriptions": len(mock_subscriptions),
+        "active_subscriptions": len([s for s in mock_subscriptions if s["status"] == "active"]),
+        "popular_tools": [{"name": t["name"], "active_users": t["active_users"]} for t in tool_popularity[:3]],
+        "average_tool_price": round(sum(t["price"] for t in mock_tools) / len(mock_tools), 2)
+    }
+
+@app.get("/api/recent-activity")
+async def recent_activity():
+    recent = sorted(mock_analytics, key=lambda x: x["timestamp"], reverse=True)[:8]
+    enriched = []
+    for e in recent:
+        user = next((u for u in mock_users if u["id"] == e["user_id"]), None)
+        tool = next((t for t in mock_tools if t["id"] == e["tool_id"]), None)
+        enriched.append({
+            "event": e["event"],
+            "user_name": user["name"] if user else "Unknown",
+            "tool_name": tool["name"] if tool else "Unknown",
+            "timestamp": e["timestamp"],
+            "metadata": e["metadata"]
+        })
+    return enriched
+
+@app.get("/api/chart-data")
+async def chart_data():
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"]
+    revenue_chart = [random.uniform(5000, 15000) for _ in range(8)]
+    user_growth = [100, 150, 200, 280, 350, 420, 500, 580]
+    churn_chart = [random.uniform(1, 8) for _ in range(8)]
+    return {
+        "revenue_by_month": [{"month": m, "revenue": round(r, 2)} for m, r in zip(months, revenue_chart)],
+        "user_growth": [{"month": m, "users": u} for m, u in zip(months, user_growth)],
+        "monthly_churn_rate": [{"month": m, "churn": round(c, 2)} for m, c in zip(months, churn_chart)]
+    }
+
+@app.get("/api/dashboard")
+async def dashboard():
+    return {
+        "total_users": len(mock_users),
+        "active_subscriptions": len([s for s in mock_subscriptions if s["status"] == "active"]),
+        "monthly_revenue": round(sum(s["price"] for s in mock_subscriptions if s["status"] == "active"), 2),
+        "popular_tool": max(mock_tools, key=lambda x: x["active_users"])["name"],
+        "recent_signups": sorted(mock_users, key=lambda x: x["created_at"], reverse=True)[:5],
+        "tools_summary": [
+            {"name": t["name"], "category": t["category"], "price": t["price"], "active_users": t["active_users"]}
+            for t in mock_tools[:5]
+        ]
+    }
+
+PORT = int(os.environ.get("COMPANY_PORT", 8000))
+
 if __name__ == "__main__":
-    PORT = int(os.environ.get("COMPANY_PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
