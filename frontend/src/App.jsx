@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
-  BarChart3Panel, TrendingUpPanel, DollarSign, UsersPanel, BellPanel, SearchPanel, SettingsPanel,
-  ChevronDownPanel, ChevronUpPanel, ActivityPanel, ZapPanel, ClockPanel, ArrowUpRightPanel,
-  ArrowDownRightPanel, DownloadPanel, FilterPanel, PlusPanel, XPanel, CheckPanel, AlertCirclePanel,
-  LayoutDashboardPanel, LineChart, FileTextPanel, UserCircle, LogOutPanel,
-  MenuPanel, RefreshCwPanel, ShoppingCartPanel, MessageSquarePanel, StarPanel,
-  LayersPanel, BoxPanel, PackagePanel, Sparkles
+  BarChart3, TrendingUp, DollarSign, Users, Bell, Search, Settings,
+  ChevronDown, ChevronUp, Activity, Zap, Clock, ArrowUpRight,
+  ArrowDownRight, Download, Filter, Plus, X, Check, AlertCircle,
+  LayoutDashboard, LineChart as LineChartIcon, FileText, UserCircle, LogOut,
+  Menu, RefreshCw, ShoppingCart, MessageSquare, Star,
+  Layers, Box, Package, Sparkles
 } from 'lucide-react';
 
 const BASE = window.__BACKEND_URL__ || '';
@@ -24,9 +24,9 @@ async function apiFetch(path, opts = {}) {
 const mockData = {
   kpis: [
     { label: 'Total Revenue', value: '$12,847', delta: 12.5, icon: DollarSign },
-    { label: 'Active UsersPanel', value: '2,341', delta: 8.2, icon: UsersPanel },
-    { label: 'Conversion Rate', value: '3.24%', delta: -2.1, icon: TrendingUpPanel },
-    { label: 'Avg. Session', value: '4m 32s', delta: 5.7, icon: ClockPanel }
+    { label: 'Active Users', value: '2,341', delta: 8.2, icon: Users },
+    { label: 'Conversion Rate', value: '3.24%', delta: -2.1, icon: TrendingUp },
+    { label: 'Avg. Session', value: '4m 32s', delta: 5.7, icon: Clock }
   ],
   chartData: [
     { day: 'Mon', value: 2400 }, { day: 'Tue', value: 3100 },
@@ -99,7 +99,7 @@ function KPICard({ data, index }) {
           <Icon className="w-5 h-5" style={{ color: '#4F46E5' }} />
         </div>
         <div className={`flex items-center gap-1 text-sm ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
-          {isPositive ? <ArrowUpRightPanel className="w-3 h-3" /> : <ArrowDownRightPanel className="w-3 h-3" />}
+          {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
           <span>{Math.abs(delta)}%</span>
         </div>
       </div>
@@ -147,7 +147,7 @@ function AreaChart({ data }) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold gradient-text">Weekly Revenue Trend</h3>
         <div className="flex items-center gap-2 text-sm text-slate-400">
-          <RefreshCwPanel className="w-3 h-3" />
+          <RefreshCw className="w-3 h-3" />
           <span>Last 7 days</span>
         </div>
       </div>
@@ -226,20 +226,20 @@ function DataTable({ data, onSort, sortKey, sortDir }) {
   return (
     <div className="glass p-5 fade-in">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Recent ActivityPanel</h3>
+        <h3 className="text-lg font-semibold">Recent Activity</h3>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <SearchPanel className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="SearchPanel..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 w-48"
             />
           </div>
           <button className="p-1.5 rounded-lg hover:bg-white/5 transition-all duration-200 text-slate-400 hover:text-slate-200">
-            <FilterPanel className="w-4 h-4" />
+            <Filter className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -251,28 +251,28 @@ function DataTable({ data, onSort, sortKey, sortDir }) {
                 onClick={() => handleSort('user')}>
                 <div className="flex items-center gap-1">
                   User
-                  {sortKey === 'user' && (sortDir === 'asc' ? <ChevronUpPanel className="w-3 h-3" /> : <ChevronDownPanel className="w-3 h-3" />)}
+                  {sortKey === 'user' && (sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
                 </div>
               </th>
               <th className="text-left py-3 px-2 text-slate-400 font-medium cursor-pointer hover:text-slate-200"
                 onClick={() => handleSort('action')}>
                 <div className="flex items-center gap-1">
                   Action
-                  {sortKey === 'action' && (sortDir === 'asc' ? <ChevronUpPanel className="w-3 h-3" /> : <ChevronDownPanel className="w-3 h-3" />)}
+                  {sortKey === 'action' && (sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
                 </div>
               </th>
               <th className="text-left py-3 px-2 text-slate-400 font-medium cursor-pointer hover:text-slate-200"
                 onClick={() => handleSort('amount')}>
                 <div className="flex items-center gap-1">
                   Amount
-                  {sortKey === 'amount' && (sortDir === 'asc' ? <ChevronUpPanel className="w-3 h-3" /> : <ChevronDownPanel className="w-3 h-3" />)}
+                  {sortKey === 'amount' && (sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
                 </div>
               </th>
               <th className="text-left py-3 px-2 text-slate-400 font-medium cursor-pointer hover:text-slate-200"
                 onClick={() => handleSort('time')}>
                 <div className="flex items-center gap-1">
                   Time
-                  {sortKey === 'time' && (sortDir === 'asc' ? <ChevronUpPanel className="w-3 h-3" /> : <ChevronDownPanel className="w-3 h-3" />)}
+                  {sortKey === 'time' && (sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
                 </div>
               </th>
               <th className="text-left py-3 px-2 text-slate-400 font-medium">Status</th>
@@ -332,10 +332,10 @@ function QuickActions() {
   };
 
   const actions = [
-    { icon: PlusPanel, label: 'New Template', color: 'bg-indigo-500/20 text-indigo-300' },
-    { icon: DownloadPanel, label: 'Export Data', color: 'bg-emerald-500/20 text-emerald-300' },
-    { icon: MessageSquarePanel, label: 'Send Update', color: 'bg-amber-500/20 text-amber-300' },
-    { icon: StarPanel, label: 'Top Tools', color: 'bg-pink-500/20 text-pink-300' }
+    { icon: Plus, label: 'New Template', color: 'bg-indigo-500/20 text-indigo-300' },
+    { icon: Download, label: 'Export Data', color: 'bg-emerald-500/20 text-emerald-300' },
+    { icon: MessageSquare, label: 'Send Update', color: 'bg-amber-500/20 text-amber-300' },
+    { icon: Star, label: 'Top Tools', color: 'bg-pink-500/20 text-pink-300' }
   ];
 
   return (
@@ -376,7 +376,7 @@ function QuickActions() {
               <div className="text-right">
                 <div className="text-sm font-semibold" style={{ color: '#4F46E5' }}>{template.price}</div>
                 <div className="flex items-center gap-1 text-xs text-amber-400">
-                  <StarPanel className="w-3 h-3 fill-current" />
+                  <Star className="w-3 h-3 fill-current" />
                   {template.rating}
                 </div>
               </div>
@@ -391,7 +391,7 @@ function QuickActions() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold">New Template Request</h3>
               <button onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-white/5 transition-colors">
-                <XPanel className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -401,9 +401,10 @@ function QuickActions() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50"
+                  placeholder="Your name"
                 />
-                {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                {errors.name && <p className="text-xs text-red-400 mt-1">{errors.name}</p>}
               </div>
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Email</label>
@@ -411,27 +412,30 @@ function QuickActions() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50"
+                  placeholder="your@email.com"
                 />
-                {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-xs text-red-400 mt-1">{errors.email}</p>}
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Tool Type</label>
+                <label className="block text-sm text-slate-400 mb-1">Tool</label>
                 <select
                   value={formData.tool}
                   onChange={(e) => setFormData(prev => ({ ...prev, tool: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50">
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500/50"
+                >
                   <option value="">Select a tool</option>
-                  <option value="Invoice Generator">Invoice Generator</option>
-                  <option value="Social Scheduler">Social Scheduler</option>
-                  <option value="Analytics Lite">Analytics Lite</option>
-                  <option value="Email Blaster">Email Blaster</option>
+                  <option value="invoice">Invoice Generator</option>
+                  <option value="social">Social Scheduler</option>
+                  <option value="analytics">Analytics Lite</option>
+                  <option value="email">Email Blaster</option>
                 </select>
-                {errors.tool && <p className="text-red-400 text-xs mt-1">{errors.tool}</p>}
+                {errors.tool && <p className="text-xs text-red-400 mt-1">{errors.tool}</p>}
               </div>
-              <button type="submit"
-                className="w-full py-2 rounded-lg text-sm font-medium text-white transition-all duration-200"
-                style={{ backgroundColor: '#4F46E5' }}>
+              <button
+                type="submit"
+                className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors duration-200"
+              >
                 Submit Request
               </button>
             </form>
@@ -440,8 +444,8 @@ function QuickActions() {
       )}
 
       {toast && (
-        <div className="fixed bottom-4 right-4 glass p-4 fade-in flex items-center gap-2" style={{ zIndex: 999 }}>
-          <CheckPanel className="w-4 h-4 text-emerald-400" />
+        <div className="fixed bottom-6 right-6 glass px-4 py-3 flex items-center gap-2 fade-in">
+          <Check className="w-4 h-4 text-emerald-400" />
           <span className="text-sm">{toast.message}</span>
         </div>
       )}
@@ -449,51 +453,52 @@ function QuickActions() {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav, collapsed, setCollapsed }) {
+function Sidebar() {
+  const [activePage, setActivePage] = useState('dashboard');
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboardPanel },
-    { id: 'analytics', label: 'Analytics', icon: LineChart },
-    { id: 'reports', label: 'Reports', icon: FileTextPanel },
-    { id: 'settings', label: 'SettingsPanel', icon: SettingsPanel }
+    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
+    { icon: BarChart3, label: 'Analytics', id: 'analytics' },
+    { icon: FileText, label: 'Reports', id: 'reports' },
+    { icon: Settings, label: 'Settings', id: 'settings' }
   ];
 
   return (
-    <aside className={`${collapsed ? 'w-16' : 'w-64'} flex-shrink-0 flex flex-col border-r border-white/5 bg-white/[0.02] h-full transition-all duration-300`}>
-      <div className="h-14 flex items-center gap-3 px-4 border-b border-white/5">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#4F46E5' }}>
-          <Sparkles className="w-5 h-5 text-white" />
-        </div>
-        {!collapsed && (
-          <div>
-            <div className="text-sm font-semibold">MicroToolKit</div>
-            <div className="text-xs text-slate-400">by PixelForge</div>
+    <aside className="w-64 flex-shrink-0 flex flex-col border-r border-white/5 bg-white/[0.02] h-full">
+      <div className="p-6 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
-        )}
-        <button onClick={() => setCollapsed(!collapsed)} className="ml-auto p-1 rounded-lg hover:bg-white/5 transition-colors">
-          <MenuPanel className="w-4 h-4 text-slate-400" />
-        </button>
+          <div>
+            <h1 className="text-lg font-bold gradient-text">SoloSuite</h1>
+            <p className="text-xs text-slate-400">PixelForge Studios</p>
+          </div>
+        </div>
       </div>
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setActiveNav(item.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-              activeNav === item.id
-                ? 'text-white'
+            onClick={() => setActivePage(item.id)}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+              activePage === item.id
+                ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
             }`}
-            style={activeNav === item.id ? { backgroundColor: 'rgba(79, 70, 229, 0.2)' } : {}}
           >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span>{item.label}</span>}
+            <item.icon className="w-4 h-4" />
+            <span>{item.label}</span>
           </button>
         ))}
       </nav>
-      <div className="p-3 border-t border-white/5">
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-200">
-          <LogOutPanel className="w-5 h-5" />
-          {!collapsed && <span>Logout</span>}
+      <div className="p-4 border-t border-white/5">
+        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-200">
+          <UserCircle className="w-4 h-4" />
+          <span>Profile</span>
+        </button>
+        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/5 transition-all duration-200">
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
         </button>
       </div>
     </aside>
@@ -501,147 +506,87 @@ function Sidebar({ activeNav, setActiveNav, collapsed, setCollapsed }) {
 }
 
 function TopBar() {
-  const [notifications, setNotifications] = useState(3);
-
   return (
-    <header className="h-14 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0 bg-white/[0.02]">
+    <header className="h-14 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0">
       <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold gradient-text">Dashboard</h1>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <BellPanel className="w-5 h-5 text-slate-400 cursor-pointer hover:text-slate-200 transition-colors" />
-          {notifications > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] flex items-center justify-center text-white"
-              style={{ backgroundColor: '#F59E0B' }}>
-              {notifications}
-            </span>
-          )}
+        <h2 className="text-sm font-semibold text-slate-300">Dashboard Overview</h2>
+        <div className="flex items-center gap-1 text-xs text-slate-500">
+          <span>Last updated:</span>
+          <span>2 minutes ago</span>
         </div>
-        <div className="flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded-lg p-1.5 transition-colors">
-          <div className="w-8 h-8 rounded-full bg-indigo-500/30 flex items-center justify-center">
-            <UserCircle className="w-5 h-5 text-indigo-300" />
-          </div>
-          <div className="hidden sm:block">
-            <div className="text-sm font-medium">Alex Turner</div>
-            <div className="text-xs text-slate-400">Founder @ PixelForge</div>
-          </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button className="p-2 rounded-lg hover:bg-white/5 transition-all duration-200 text-slate-400 hover:text-slate-200">
+          <Bell className="w-4 h-4" />
+        </button>
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-xs font-medium text-white">
+          JD
         </div>
       </div>
     </header>
   );
 }
 
-function BarChartComponent({ data }) {
-  const [animate, setAnimate] = useState(false);
-
-  useEffect(() => {
-    setAnimate(true);
-  }, []);
-
-  const maxValue = Math.max(...(data || []).map(d => d.users));
-  const barWidth = 60;
-  const gap = 20;
-  const height = 150;
-
-  return (
-    <div className="glass p-5 fade-in mt-6">
-      <h3 className="text-lg font-semibold mb-4">Template Popularity</h3>
-      <div className="flex items-end justify-around" style={{ height }}>
-        {(data || []).map((item, i) => {
-          const barHeight = (item.users / maxValue) * (height - 20);
-          return (
-            <div key={i} className="flex flex-col items-center gap-2">
-              <div className="text-xs text-slate-400">{item.users}</div>
-              <div
-                className="w-12 rounded-t-md transition-all duration-700"
-                style={{
-                  height: animate ? barHeight : 0,
-                  backgroundColor: i % 2 === 0 ? '#4F46E5' : '#F59E0B',
-                  opacity: 0.8
-                }}
-              />
-              <div className="text-xs text-slate-400 text-center max-w-16 truncate">{item.name}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
-  const [kpiData, setKpiData] = useState(null);
-  const [chartData, setChartData] = useState(null);
-  const [activityData, setActivityData] = useState(null);
-  const [activeNav, setActiveNav] = useState('dashboard');
-  const [collapsed, setCollapsed] = useState(false);
+  const [kpiData, setKpiData] = useState(mockData.kpis);
+  const [chartData, setChartData] = useState(mockData.chartData);
+  const [activityData, setActivityData] = useState(mockData.activities);
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
   const [loading, setLoading] = useState(true);
 
   const handleSort = useCallback((key) => {
-    if (sortKey === key) {
-      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortKey(key);
+    setSortKey(prevKey => {
+      if (prevKey === key) {
+        setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+        return key;
+      }
       setSortDir('asc');
-    }
-  }, [sortKey]);
+      return key;
+    });
+  }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const [kpis, chart, activities] = await Promise.all([
-        apiFetch('/api/kpis'),
-        apiFetch('/api/chart'),
-        apiFetch('/api/activities')
-      ]);
-      setKpiData(kpis || mockData.kpis);
-      setChartData(chart || mockData.chartData);
-      setActivityData(activities || mockData.activities);
+    async function fetchData() {
+      const data = await apiFetch('/api/dashboard');
+      if (data) {
+        setKpiData(data.kpis || mockData.kpis);
+        setChartData(data.chartData || mockData.chartData);
+        setActivityData(data.activities || mockData.activities);
+      }
       setLoading(false);
-    };
+    }
     fetchData();
   }, []);
 
   return (
-    <>
+    <div className="flex h-screen overflow-hidden bg-[#06080f] text-slate-100">
       <CSSInjection />
-      <div className="flex h-screen overflow-hidden bg-[#06080f] text-slate-100">
-        <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} collapsed={collapsed} setCollapsed={setCollapsed} />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <TopBar />
-          <main className="flex-1 overflow-y-auto p-6">
-            {loading ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-                  {[1,2,3,4].map(i => (
-                    <div key={i} className="glass p-5 shimmer" style={{ height: '120px' }} />
-                  ))}
-                </div>
-                <div className="glass p-5 shimmer" style={{ height: '250px' }} />
-                <div className="glass p-5 shimmer" style={{ height: '200px' }} />
-              </div>
-            ) : (
-              <div className="flex gap-6">
-                <div className="flex-1 space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-                    {(kpiData || []).map((kpi, i) => (
-                      <KPICard key={i} data={kpi} index={i} />
-                    ))}
-                  </div>
-                  <AreaChart data={chartData || []} />
-                  <BarChartComponent data={mockData.templates} />
-                  <DataTable data={activityData || []} onSort={handleSort} sortKey={sortKey} sortDir={sortDir} />
-                </div>
-                <div className="w-80 flex-shrink-0">
-                  <QuickActions />
-                </div>
-              </div>
-            )}
-          </main>
-        </div>
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar />
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+            {(kpiData || []).map((kpi, i) => (
+              <KPICard key={i} data={kpi} index={i} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+            <div className="xl:col-span-2">
+              <AreaChart data={chartData} />
+            </div>
+            <div>
+              <QuickActions />
+            </div>
+          </div>
+          <DataTable
+            data={activityData}
+            onSort={handleSort}
+            sortKey={sortKey}
+            sortDir={sortDir}
+          />
+        </main>
       </div>
-    </>
+    </div>
   );
 }
